@@ -2,6 +2,7 @@
 include 'template/db.php';
 include 'template/header.php';
 include 'template/nav_customer.php';
+$message = '';
 $dir = 'img/'; //Место для размещения прикрепленных файлов
 session_start();
 if(!empty($_POST)){
@@ -9,14 +10,21 @@ if(!empty($_POST)){
     $id_category = $_POST['id_category'];
     $name_zayavki = $_POST['name_zayavki'];
     $description = $_POST['description'];
-    $sql = "insert into zayavki (id_user, id_category, name_zayavki, description, date_zayavki) values ($id_user, $id_category, '$name_zayavki', '$description', now())";
-    $result3 = $mysqli->query($sql);
     $insertid = $mysqli->insert_id;
     $file = $dir.$insertid.'_'.basename($_FILES['userfile']['name']); //Имя файла
-    if(move_uploaded_file($_FILES['userfile']['tmp_name'], $file)){
-        $sql = "update zayavki set img_issue = '$file' where id_zayavki = $insertid";
-        $result4 = $mysqli->query($sql);
-        header("Location: zayavka_customer.php");
+    $allowedext = ['jpg', 'jpeg','png'];
+    $extention = pathinfo($_FILES['userfile']['name'], PATHINFO_EXTENSION);
+    if(!in_array($extention, $allowedext)){
+        $message = 'Неподдерживаемый тип файла';
+    }
+    else{
+        if(move_uploaded_file($_FILES['userfile']['tmp_name'], $file)){
+            $sql = "insert into zayavki (id_user, id_category, name_zayavki, description, date_zayavki) values ($id_user, $id_category, '$name_zayavki', '$description', now())";
+            $result3 = $mysqli->query($sql);
+            $sql = "update zayavki set img_issue = '$file' where id_zayavki = $insertid";
+            $result4 = $mysqli->query($sql);
+            header("Location: zayavka_customer.php");
+        }
     }
 }
 ?>
@@ -55,7 +63,8 @@ if(!empty($_POST)){
             <div class="mb-3">
                 <input type="submit" class="btn btn-primary" value="Сохранить">
             </div>
-        </form>
+        </form><br>
+        <p><?php echo $message; ?></p>
     </div>
     </div>
 </div>
